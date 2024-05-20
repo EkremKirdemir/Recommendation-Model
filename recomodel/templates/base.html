@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Hello{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"> {% block extra_head %}{% endblock %}
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding-top: 60px;
+            background-color: #f4f4f4;
+        }
+        
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        
+        .navbar a,
+        .navbar span {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 24px;
+        }
+        
+        .navbar a:hover {
+            background-color: #555;
+        }
+        
+        .navbar .menu {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .navbar i {
+            margin-right: 8px;
+        }
+        
+        .user-info {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .navbar .left-menu {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .navbar .right-menu {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding-right: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="left-menu">
+            <a href="{% url 'home' %}"><i class="fa-solid fa-house"></i></a>
+            <a href="{% url 'search' %}"><i class="fa-solid fa-magnifying-glass"></i></a> {% if request.session.username %}
+            <a href="{% url 'profile' %}"><i class="fa-solid fa-user"></i></a> {% endif %}
+        </div>
+        <div class="right-menu">
+            {% if request.session.username %}
+            <span class="user-info">Hi, {{ request.session.username }}!</span>
+            <a href="{% url 'logout' %}">Logout</a> {% else %}
+            <span class="user-info">Hi, Guest!</span>
+            <a href="{% url 'login' %}">Login</a> {% endif %}
+        </div>
+    </nav>
+    {% block content %}{% endblock %} {% block scripts %}{% endblock %}
+</body>
+
+</html>

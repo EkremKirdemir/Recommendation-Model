@@ -1,0 +1,200 @@
+{% extends 'base.html' %} {% block title %}Home{% endblock %} {% block navbar_title %}Past Search Results{% endblock %} {% block extra_head %}
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 60px 0 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        background: linear-gradient(to right, #6dd5ed, #2193b0);
+    }
+    
+    .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        background-color: #f8f9fa;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+        justify-content: space-between;
+    }
+    
+    .filter-form>div,
+    .filter-form>button {
+        flex: 1 1 auto;
+    }
+    
+    .filter-form>button {
+        margin-left: auto;
+        width: auto;
+        white-space: nowrap;
+    }
+    
+    .filter-form label {
+        margin-right: 10px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .filter-form div {
+        margin-bottom: 10px;
+    }
+    
+    .filter-form label {
+        margin-right: 10px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .filter-form input[type="text"],
+    .filter-form select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    
+    .filter-form button {
+        background-color: #007bff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .filter-form button:hover {
+        background-color: #0056b3;
+    }
+    
+    .search-results-container {
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 80%;
+        max-width: 1000px;
+        margin-top: 20px;
+    }
+    
+    .result-card {
+        background-color: #fff;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .result-card:hover {
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .result-title {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #007bff;
+        margin-bottom: 5px;
+    }
+    
+    .result-info {
+        font-size: 0.9em;
+        color: #333;
+        line-height: 1.6;
+        margin-bottom: 5px;
+    }
+    
+    .result-info span {
+        font-weight: bold;
+    }
+    
+    ul {
+        padding: 0;
+        margin-top: 20px;
+    }
+    
+    li {
+        background-color: #ffffff;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+        list-style-type: none;
+    }
+    
+    li a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1.2em;
+    }
+    
+    li a:hover {
+        text-decoration: underline;
+    }
+    
+    .pagination {
+        margin-top: 30px;
+        padding: 20px;
+    }
+    
+    .pagination .step-links a {
+        background-color: #007bff;
+        color: white;
+        padding: 8px 16px;
+        margin: 0 4px;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+    }
+    
+    .pagination .step-links a:hover {
+        background-color: #0056b3;
+    }
+    
+    .pagination .current {
+        padding: 8px 16px;
+        background-color: #6c757d;
+        color: white;
+        border-radius: 4px;
+    }
+    
+    .feedback-buttons {
+        margin-top: 10px;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="search-results-container">
+    <h2>Search Results for "{{ query }}"</h2>
+    <ul>
+        {% for result in page_obj %}
+        <li class="result-card">
+            <div class="result-title">
+                <a href="{% url 'paper_detail' article_id=result.id_str %}">{{ result.paper_name }}</a>
+            </div>
+        </li>
+        {% empty %}
+        <li>No results found for "{{ query }}".</li>
+        {% endfor %}
+    </ul>
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">&laquo; previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span> {% if page_obj.has_next %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">next &raquo;</a> {% endif %}
+        </span>
+    </div>
+
+</div>
+{% endblock %}

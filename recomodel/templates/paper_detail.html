@@ -1,0 +1,65 @@
+{% extends 'base.html' %} {% block title %}{{ document.title }}{% endblock %} {% block navbar_title %}Paper Details{% endblock %} {% block extra_head %}
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 60px 0 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        background: linear-gradient(to right, #6dd5ed, #2193b0);
+    }
+    
+    .paper-detail-container {
+        text-align: left;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin: 60px auto 0;
+        width: 80%;
+        max-width: 800px;
+    }
+    
+    .paper-detail-container h1 {
+        color: #007bff;
+        font-size: 2em;
+        text-align: center;
+    }
+    
+    .authors {
+        margin-bottom: 15px;
+    }
+    
+    .author {
+        display: inline-block;
+        background-color: #96c1e0;
+        color: #007bff;
+        margin-right: 10px;
+        padding: 5px;
+        border-radius: 5px;
+    }
+    
+    .abstract {
+        margin-bottom: 20px;
+    }
+    
+    .keywords {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="paper-detail-container">
+    <h1>{{ document.title }}</h1>
+    <div class="abstract">
+        <h3>Abstract</h3>
+        <p>{{ document.abstract }}</p>
+    </div>
+
+    <div class="keywords">
+        <h3>Keywords</h3>
+        <p>{{ document.keywords|join:", " }}</p>
+    </div>
+</div>
+{% endblock %}

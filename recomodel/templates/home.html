@@ -1,0 +1,78 @@
+{% extends 'base.html' %} {% block title %}Home{% endblock %} {% block extra_head %}
+<style>
+    .auth-form {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        width: 300px;
+        margin: 20px;
+    }
+    
+    .auth-form h2 {
+        color: #007bff;
+    }
+    
+    .auth-form input[type="text"],
+    .auth-form input[type="password"] {
+        width: 100%;
+        padding: 8px;
+        margin: 10px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        border-radius: 4px;
+    }
+    
+    .auth-form button {
+        background-color: #007bff;
+        color: white;
+        padding: 14px 20px;
+        margin: 8px 0;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        border-radius: 4px;
+    }
+    
+    .auth-form button:hover {
+        background-color: #0056b3;
+    }
+    
+    .form-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80vh;
+    }
+</style>
+{% endblock %} {% block content %} {% if messages %} {% for message in messages %}
+<div class="{{ message.tags }}">
+    {{ message }}
+</div>
+{% endfor %} {% endif %} {% if not user.is_authenticated %}
+<div class="form-container">
+    <div class="auth-form">
+        <h2>Login</h2>
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <input type="text" placeholder="Enter Username" name="username" required>
+            <input type="password" placeholder="Enter Password" name="password" required>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    <div class="auth-form">
+        <h2>Register</h2>
+        <form method="post" action="{% url 'register' %}">
+            {% csrf_token %}
+            <input type="text" placeholder="Choose Username" name="username" required>
+            <input type="password" placeholder="Choose Password" name="password" required>
+            <button type="submit">Register</button>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="form-container">
+    <h2>Welcome back, {{ user.username }}!</h2>
+</div>
+{% endif %} {% endblock %}

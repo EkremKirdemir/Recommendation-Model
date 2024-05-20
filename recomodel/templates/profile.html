@@ -1,0 +1,225 @@
+{% extends 'base.html' %} {% block title %}Profile{% endblock %} {% block navbar_title %}Profile{% endblock %} {% block extra_head %}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile</title>
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 60px 0 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(to right, #6dd5ed, #2193b0);
+    }
+    
+    .container {
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        width: 60%;
+    }
+    
+    .search-bar {
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    
+    .keyword-list {
+        max-height: 200px;
+        overflow-y: scroll;
+        border: 1px solid #ccc;
+        padding: 10px;
+        list-style-type: none;
+        text-align: center;
+        background-color: #0f4f5e;
+    }
+    
+    .keyword-list li {
+        padding: 5px;
+        cursor: pointer;
+        text-align: center;
+        background-color: #0f4f5e;
+    }
+    
+    .keyword-list li.selected {
+        background-color: #2193b0;
+    }
+    
+    .keyword-list li.disabled {
+        color: #999;
+        cursor: not-allowed;
+    }
+    
+    .selected-keywords {
+        margin-top: 10px;
+        list-style-type: none;
+        padding: 0;
+        text-align: center;
+    }
+    
+    .selected-keywords li {
+        padding: 5px;
+        border: 1px solid #ccc;
+        margin-bottom: 5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .selected-keywords li button {
+        margin-left: 10px;
+    }
+    
+    .performance-metrics {
+        text-align: center;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="container">
+    <h1>Profile</h1>
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" id="search-bar" class="search-bar" placeholder="Search keywords..." onkeyup="filterKeywords()">
+        <ul id="keyword-list" class="keyword-list">
+            {% for keyword in keywords %}
+            <li data-keyword="{{ keyword }}" onclick="addKeyword('{{ keyword }}')" class="{% if keyword in user_keywords %}selected{% endif %}">{{ keyword }}</li>
+            {% endfor %}
+        </ul>
+        <ul id="selected-keywords" class="selected-keywords">
+            {% for keyword in user_keywords %}
+            <li data-keyword="{{ keyword }}">{{ keyword }} <button type="button" onclick="removeKeyword('{{ keyword }}')">Remove</button></li>
+            {% endfor %}
+        </ul>
+        <div id="selected-keywords-input-container"></div>
+        <button type="submit" id="submit-button" disabled>Save</button>
+    </form>
+    <div class="performance-metrics">
+        <h2>Performance Metrics</h2>
+        <p>Precision: {{ precision }}</p>
+    </div>
+    {% if messages %}
+    <ul>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+
+<script>
+    function filterKeywords() {
+        const searchValue = document.getElementById('search-bar').value.toLowerCase();
+        const keywordList = document.getElementById('keyword-list').getElementsByTagName('li');
+        for (let i = 0; i < keywordList.length; i++) {
+            const keyword = keywordList[i].dataset.keyword.toLowerCase();
+            if (keyword.includes(searchValue)) {
+                keywordList[i].style.display = '';
+            } else {
+                keywordList[i].style.display = 'none';
+            }
+        }
+    }
+
+    function addKeyword(keyword) {
+        const selectedKeywords = document.getElementById('selected-keywords');
+        const submitButton = document.getElementById('submit-button');
+
+        if (selectedKeywords.children.length < 5) {
+            const listItem = document.createElement('li');
+            listItem.dataset.keyword = keyword;
+            listItem.innerHTML = `${keyword} <button type="button" onclick="removeKeyword('${keyword}')">Remove</button>`;
+            selectedKeywords.appendChild(listItem);
+
+            updateSelectedKeywordsInput();
+            if (selectedKeywords.children.length === 5) {
+                submitButton.disabled = false;
+                disableRemainingKeywords();
+            }
+        }
+        const keywordListItems = document.getElementById('keyword-list').getElementsByTagName('li');
+        for (let i = 0; i < keywordListItems.length; i++) {
+            if (keywordListItems[i].dataset.keyword === keyword) {
+                keywordListItems[i].classList.add('selected');
+                keywordListItems[i].onclick = null;
+            }
+        }
+    }
+
+    function removeKeyword(keyword) {
+        const selectedKeywords = document.getElementById('selected-keywords');
+        const submitButton = document.getElementById('submit-button');
+
+        for (let i = 0; i < selectedKeywords.children.length; i++) {
+            if (selectedKeywords.children[i].dataset.keyword === keyword) {
+                selectedKeywords.removeChild(selectedKeywords.children[i]);
+                break;
+            }
+        }
+
+        updateSelectedKeywordsInput();
+        submitButton.disabled = selectedKeywords.children.length !== 5;
+        enableKeywordInteraction();
+
+        const keywordListItems = document.getElementById('keyword-list').getElementsByTagName('li');
+        for (let i = 0; i < keywordListItems.length; i++) {
+            if (keywordListItems[i].dataset.keyword === keyword) {
+                keywordListItems[i].classList.remove('selected');
+                keywordListItems[i].classList.remove('disabled');
+                keywordListItems[i].onclick = () => addKeyword(keyword);
+            }
+        }
+    }
+
+    function updateSelectedKeywordsInput() {
+        const selectedKeywords = document.getElementById('selected-keywords');
+        const selectedKeywordsInputContainer = document.getElementById('selected-keywords-input-container');
+        selectedKeywordsInputContainer.innerHTML = '';
+
+        for (let i = 0; i < selectedKeywords.children.length; i++) {
+            const keyword = selectedKeywords.children[i].dataset.keyword;
+            const inputElement = document.createElement('input');
+            inputElement.type = 'hidden';
+            inputElement.name = 'keywords';
+            inputElement.value = keyword;
+            selectedKeywordsInputContainer.appendChild(inputElement);
+        }
+    }
+
+    function disableRemainingKeywords() {
+        const keywordListItems = document.getElementById('keyword-list').getElementsByTagName('li');
+        for (let i = 0; i < keywordListItems.length; i++) {
+            if (!keywordListItems[i].classList.contains('selected')) {
+                keywordListItems[i].classList.add('disabled');
+                keywordListItems[i].onclick = null;
+            }
+        }
+    }
+
+    function enableKeywordInteraction() {
+        const keywordListItems = document.getElementById('keyword-list').getElementsByTagName('li');
+        for (let i = 0; i < keywordListItems.length; i++) {
+            if (!keywordListItems[i].classList.contains('selected')) {
+                keywordListItems[i].classList.remove('disabled');
+                const keyword = keywordListItems[i].dataset.keyword;
+                keywordListItems[i].onclick = () => addKeyword(keyword);
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const submitButton = document.getElementById('submit-button');
+        const selectedKeywords = document.getElementById('selected-keywords');
+        submitButton.disabled = selectedKeywords.children.length !== 5;
+        if (selectedKeywords.children.length === 5) {
+            disableRemainingKeywords();
+        }
+    });
+</script>
+{% endblock %}

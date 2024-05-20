@@ -1,0 +1,188 @@
+{% extends 'base.html' %} {% block title %}Search Engine{% endblock %} {% block navbar_title %}Search Engine{% endblock %} {% block extra_head %}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search Engine</title>
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(to right, #6dd5ed, #2193b0);
+    }
+    
+    .search-container {
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        width: 60%;
+    }
+    
+    .search-form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .search-box {
+        padding: 10px 15px;
+        width: 100%;
+        margin: 0 0 20px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    
+    .search-button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        border: none;
+        color: white;
+        cursor: pointer;
+        border-radius: 5px;
+        width: auto;
+    }
+    
+    .search-button:hover {
+        background-color: #0056b3;
+    }
+    
+    .loading-message {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px;
+        font-size: 1.2em;
+        color: #333;
+        visibility: hidden;
+    }
+    
+    .loading-icon {
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        margin-right: 10px;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+    
+    .recommendations {
+        margin-top: 20px;
+        text-align: center;
+    }
+    
+    .recommendation {
+        margin-bottom: 20px;
+    }
+    
+    .recommendation a {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #007bff;
+        text-decoration: none;
+    }
+    
+    .recommendation a:hover {
+        text-decoration: underline;
+    }
+    
+    .feedback-buttons {
+        margin-top: 10px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .feedback-buttons a {
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 5px;
+        color: white;
+        text-decoration: none;
+        font-size: 0.9em;
+    }
+    
+    .btn-success {
+        background-color: #28a745;
+    }
+    
+    .btn-success:hover {
+        background-color: #218838;
+    }
+    
+    .btn-warning {
+        background-color: #ffc107;
+    }
+    
+    .btn-warning:hover {
+        background-color: #e0a800;
+    }
+    
+    .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 5px;
+        color: white;
+        text-decoration: none;
+        font-size: 0.9em;
+    }
+    
+    .btn i {
+        margin-right: 5px;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="search-container">
+    <h1>Scholar Search Engine</h1>
+    <form action="{% url 'search' %}" method="get" class="search-form" id="searchForm">
+        <input type="text" name="query" class="search-box" placeholder="Enter search terms...">
+        <button type="submit" class="search-button">Search</button>
+    </form>
+    <div id="loadingMessage" class="loading-message">
+        <div class="loading-icon"></div>Searching...
+    </div>
+
+    {% if recommendations %}
+    <div class="recommendations">
+        <h2>Recommended Articles</h2>
+        {% for article_id, title in recommendations %}
+        <div class="recommendation">
+            <a href="{% url 'paper_detail' article_id=article_id %}">{{ title }}</a>
+            <div class="feedback-buttons">
+                <a href="{% url 'feedback' article_id=article_id feedback_type='true_positive' %}" class="btn btn-success">
+                    <i class="fa-solid fa-thumbs-up"></i> True Positive
+                </a>
+                <a href="{% url 'feedback' article_id=article_id feedback_type='false_positive' %}" class="btn btn-warning">
+                    <i class="fa-solid fa-thumbs-down"></i> False Positive
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <script>
+        document.getElementById('searchForm').onsubmit = function(event) {
+            document.getElementById('loadingMessage').style.visibility = 'visible';
+        };
+    </script>
+
+</div>
+{% endblock %}
