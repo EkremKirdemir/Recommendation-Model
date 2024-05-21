@@ -91,14 +91,6 @@ def get_embeddings(text):
         outputs = model(**inputs)
     return outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
 
-def compute_user_embedding(user_id):
-    user = users_collection.find_one({'_id': ObjectId(user_id)})
-    if not user or 'keywords' not in user or not user['keywords']:
-        return None
-
-    embeddings = [get_embeddings(keyword) for keyword in user['keywords']]
-    user_embedding = np.mean(embeddings, axis=0)
-    return user_embedding
 
 def extract_title(article_text):
     match = re.search(r'--T\s*(.*?)\s*--A', article_text, re.DOTALL)
@@ -106,33 +98,34 @@ def extract_title(article_text):
         return match.group(1).strip()
     return 'Untitled'
 
-def recommend_articles(user_embedding, num_recommendations=5):
-    if user_embedding is None:
-        return None
+def calculate_user_embedding(user_profile):
+    interest_keywords = user_profile.get('keywords', [])
+    interest_embeddings = [get_embeddings(keyword) for keyword in interest_keywords]
+    visited_embeddings = [np.array(e) for e in user_profile.get('visited_embeddings', [])] if 'visited_embeddings' in user_profile else []
 
+    all_embeddings = interest_embeddings + visited_embeddings
+    if all_embeddings:
+        return np.mean(all_embeddings, axis=0)
+    return None
+
+def recommend_articles(user_embedding, articles_collection, top_n=5):
     articles = list(articles_collection.find({'embedding': {'$exists': True}}))
-    article_embeddings = [article['embedding'] for article in articles]
-    article_ids = [str(article['_id']) for article in articles]
-    article_texts = [article['article'] for article in articles]
-
-    if len(article_embeddings) == 0:
-        print("No articles with embeddings found.")
+    if not articles:
         return []
 
+    article_ids = [str(article['_id']) for article in articles]
+    article_embeddings = [np.array(article['embedding']) for article in articles]
+
     similarities = cosine_similarity([user_embedding], article_embeddings)[0]
-    top_indices = similarities.argsort()[-num_recommendations:][::-1]
+    top_indices = np.argsort(similarities)[-top_n:][::-1]
 
-
-    recommended_articles = [
-        (article_ids[i], extract_title(article_texts[i]))
-        for i in top_indices
-        if i < len(article_ids) and i < len(article_texts)
-    ]
-
+    recommended_articles = [(article_ids[i], extract_title(articles[i]['article'])) for i in top_indices]
     return recommended_articles
 
 def search(request):
     user_id = request.session.get('user_id')
+    user_profile = users_collection.find_one({'_id': ObjectId(user_id)}) if user_id else None
+
     if not user_id:
         messages.error(request, "You must be logged in to access this page.")
         return redirect('login')
@@ -141,16 +134,19 @@ def search(request):
     if query:
         return redirect('search_results', query=query)
 
-    user_embedding = compute_user_embedding(user_id)
-    if user_embedding is None:
-        messages.error(request, "You must establish your interests first.")
-        return redirect('profile')
-
-    recommendations = recommend_articles(user_embedding)
-    if recommendations is None:
+    if user_profile:
+        user_embedding = calculate_user_embedding(user_profile)
+        if user_embedding is not None:
+            recommendations = recommend_articles(user_embedding, articles_collection)
+        else:
+            messages.error(request, "You must establish your interests first.")
+            print('ateşe düştüm vaaah')
+            return redirect('profile')
+    else:
         recommendations = []
 
     return render(request, 'search.html', {'recommendations': recommendations})
+
 
 def feedback(request, article_id, feedback_type):
     user_id = request.session.get('user_id')
@@ -206,12 +202,23 @@ def extract_abstract(article_text):
         return match.group(1).strip()
     return 'No abstract available'
 
-def paper_detail(request, article_id):
+def get_article_embedding(article_id):
     article = articles_collection.find_one({'_id': ObjectId(article_id)})
-    if not article:
-        messages.error(request, "Article not found.")
-        return redirect('search')
+    if article and 'embedding' in article:
+        return np.array(article['embedding'])
+    return None
 
+def paper_detail(request, article_id):
+    user_id = request.session.get('user_id')
+    if user_id:
+        article_embedding = get_article_embedding(article_id)
+        if article_embedding is not None:
+            users_collection.update_one(
+                {'_id': ObjectId(user_id)},
+                {'$addToSet': {'visited_embeddings': article_embedding.tolist()}}
+            )
+
+    article = articles_collection.find_one({'_id': ObjectId(article_id)})
     article_text = article['article']
     document = {
         'title': extract_title(article_text),

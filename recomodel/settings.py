@@ -11,13 +11,19 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
+SESSION_FILE_PATH = os.path.join(BASE_DIR, '/tmp/django_sessions')
+if not os.path.exists(SESSION_FILE_PATH):
+    os.makedirs(SESSION_FILE_PATH)
 
+# Use the file-based session backend
+SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-vii^vhpgdz*)rgi!a@+$7aotmn9jzo!ik9quc6z$kh=&8zma!='
 
@@ -102,5 +108,5 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Use file-based sessions instead of database sessions
-SESSION_ENGINE = 'django.contrib.sessions.backends.file'
-SESSION_FILE_PATH = '/tmp/django_sessions'  # or any other directory with write permissions
+# SESSION_ENGINE = 'django.contrib.sessions.backends.file'
+# SESSION_FILE_PATH = '/tmp/django_sessions'  # or any other directory with write permissions
